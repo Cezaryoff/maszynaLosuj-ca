@@ -6,14 +6,10 @@
     <title>Losowanie Pary do Wręczania Prezentów</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        input, button { padding: 10px; font-size: 16px; margin-top: 10px; }
-        ul { list-style-type: none; padding: 0; }
         .uczestnik-button { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px; }
         .uczestnik-button:hover { background-color: #45a049; }
         .inactive { background-color: gray; cursor: not-allowed; }
-        #wynik li { display: none; font-weight: bold; color: #333; }
-        .restart-button { background-color: #f44336; color: white; padding: 10px 20px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
-        .restart-button:hover { background-color: #e53935; }
+        #wynik li { font-weight: bold; color: #333; }
     </style>
 </head>
 <body>
@@ -21,61 +17,23 @@
     <h1>Losowanie Pary do Wręczania Prezentów</h1>
     <p>Lista uczestników:</p>
     <div id="lista_uczestnikow"></div>
-    <br>
     <h2>Twój Odbiorca:</h2>
     <ul id="wynik"></ul>
-    <br>
-    <button id="restartButton" class="restart-button">Restartuj Losowanie</button>
 
     <script>
-        const wszyscyUczestnicy = ["Andrzej", "Martyna", "Czarek", "Ola", "Mama", "Tata", "Marek", "Ewelina"];
-        
-        // Zakazane pary
-        const zakazanePary = [
-            ["Ola", "Czarek"],
-            ["Marek", "Ewelina"],
-            ["Andrzej", "Martyna"],
-            ["Mama", "Tata"]
-        ];
+        let pary;
 
-        // Funkcja sprawdzająca, czy para jest zakazana
-        function czyParaZakazana(osoba, odbiorca) {
-            return zakazanePary.some(([zakazanaOsoba1, zakazanaOsoba2]) =>
-                (osoba === zakazanaOsoba1 && odbiorca === zakazanaOsoba2) ||
-                (osoba === zakazanaOsoba2 && odbiorca === zakazanaOsoba1)
-            );
-        }
+        // Pobieranie danych z serwera
+        fetch('http://localhost:3000/get_pairs')
+            .then(response => response.json())
+            .then(data => {
+                pary = data;
+                pokazPrzyciski();
+            })
+            .catch(error => console.error('Błąd:', error));
 
-        // Funkcja do losowania wszystkich par jednocześnie
-        function losujPary() {
-            const dostepniOdbiorcy = [...wszyscyUczestnicy];
-            const pary = {};
-
-            for (let osoba of wszyscyUczestnicy) {
-                let mozliweOpcje = dostepniOdbiorcy.filter(o => o !== osoba && !czyParaZakazana(osoba, o));
-                
-                // Jeśli nie ma dostępnych opcji, resetuj i zacznij od nowa
-                if (mozliweOpcje.length === 0) {
-                    return losujPary();
-                }
-
-                // Losowanie odbiorcy z dostępnych opcji
-                const randomIndex = Math.floor(Math.random() * mozliweOpcje.length);
-                const odbiorca = mozliweOpcje[randomIndex];
-                pary[osoba] = odbiorca;
-
-                // Usunięcie odbiorcy, aby nie mógł zostać ponownie wylosowany
-                dostepniOdbiorcy.splice(dostepniOdbiorcy.indexOf(odbiorca), 1);
-            }
-            return pary;
-        }
-
-        // Generowanie unikalnych par
-        let wylosowanePary = losujPary();
-
-        // Funkcja do wyświetlania odbiorcy po kliknięciu imienia
         function pokazOdbiorce(imieLosujacego) {
-            if (!(imieLosujacego in wylosowanePary)) {
+            if (!(imieLosujacego in pary)) {
                 alert("Twoje imię nie znajduje się na liście uczestników!");
                 return;
             }
@@ -87,24 +45,16 @@
             const wynikElement = document.getElementById("wynik");
             wynikElement.innerHTML = "";
             const li = document.createElement("li");
-            li.textContent = `${imieLosujacego} wręcza prezent ${wylosowanePary[imieLosujacego]}`;
+            li.textContent = `${imieLosujacego} wręcza prezent ${pary[imieLosujacego]}`;
             wynikElement.appendChild(li);
-
-            // Pokazujemy wynik na 3 sekundy
-            li.style.display = "block";  // Pokaż wynik
-
-            // Po 3 sekundach ukryj wynik
-            setTimeout(() => {
-                li.style.display = "none";
-            }, 3000); // 3000ms = 3 sekundy
         }
 
-        // Funkcja do wyświetlania przycisków dla wszystkich uczestników
+        // Funkcja do wyświetlania przycisków
         function pokazPrzyciski() {
             const listaUczestnikowElement = document.getElementById("lista_uczestnikow");
             listaUczestnikowElement.innerHTML = '';
 
-            wszyscyUczestnicy.forEach(imie => {
+            Object.keys(pary).forEach(imie => {
                 const przycisk = document.createElement("button");
                 przycisk.textContent = imie;
                 przycisk.classList.add("uczestnik-button");
@@ -114,25 +64,6 @@
                 listaUczestnikowElement.appendChild(przycisk);
             });
         }
-
-        // Funkcja do restartowania aplikacji
-        function restartujLosowanie() {
-            // Zresetuj pary
-            wylosowanePary = losujPary();
-            // Odśwież przyciski
-            pokazPrzyciski();
-            // Zresetuj wynik
-            const wynikElement = document.getElementById("wynik");
-            wynikElement.innerHTML = '';
-        }
-
-        // Wyświetlenie przycisków po załadowaniu strony
-        pokazPrzyciski();
-
-        // Dodanie obsługi przycisku restartu
-        const restartButton = document.getElementById("restartButton");
-        restartButton.onclick = restartujLosowanie;
-
     </script>
 
 </body>
