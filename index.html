@@ -78,7 +78,8 @@
                 alert("Twoje imię nie znajduje się na liście uczestników!");
                 return;
             }
-
+            const przycisk = document.getElementById(imieLosujacego);
+            przycisk.onclick = przycisk.style.backgroundColor="orange";
             // Wyświetlanie wyniku
             const wynikElement = document.getElementById("wynik");
             wynikElement.innerHTML = "";
@@ -92,7 +93,7 @@
             // Po 3 sekundach ukryj wynik
             setTimeout(() => {
                 li.style.display = "none";
-            }, 3000); // 3000ms = 3 sekundy
+            }, 2000); // 3000ms = 3 sekundy
         }
 
         // Funkcja do wyświetlania przycisków dla wszystkich uczestników
@@ -106,6 +107,7 @@
                 przycisk.classList.add("uczestnik-button");
                 przycisk.id = imie;
                 przycisk.onclick = () => pokazOdbiorce(imie);
+                
                 listaUczestnikowElement.appendChild(przycisk);
             });
         }
